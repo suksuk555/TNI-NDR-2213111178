@@ -7,7 +7,7 @@ import matplotlib
 
 matplotlib.rcParams['font.family'] = 'DejaVu Sans'
 
-# ------------------ หน้าเว็บเบื้องต้น ------------------
+# หน้าเว็บเบื้องต้น 
 st.set_page_config(page_title="SCB Stock Trend", layout="wide")
 
 st.markdown("""
@@ -26,7 +26,7 @@ st.markdown("""
 st.markdown('<div class="title">📈 SCB Stock Closing Price Trend</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">ดูแนวโน้มราคาหุ้น SCB ด้วยกราฟเส้นจากข้อมูลราคาปิด พร้อมวิเคราะห์เทรนด์ด้วย Linear Regression</div><br>', unsafe_allow_html=True)
 
-# ------------------ โหลดและเตรียมข้อมูล ------------------
+#  โหลดและเตรียมข้อมูล 
 df = pd.read_excel("stock_test2.xlsx")
 
 def convert_thai_date(thai_date_str):
@@ -45,14 +45,14 @@ def convert_thai_date(thai_date_str):
 df["วันที่"] = df["วันที่"].apply(convert_thai_date)
 df_sorted = df.sort_values("วันที่")
 
-# ------------------ Linear Regression ------------------
+#  Linear Regression 
 X = df_sorted["วันที่"].map(pd.Timestamp.toordinal).values.reshape(-1, 1)
 y = df_sorted["ราคาปิด"].values
 model = LinearRegression()
 model.fit(X, y)
 trend = model.predict(X)
 
-# ------------------ สร้างกราฟ ------------------
+#  สร้างกราฟ 
 fig, ax = plt.subplots(figsize=(12, 6))
 ax.plot(df_sorted["วันที่"], y, label="Actual Closing Price", marker='o')
 ax.plot(df_sorted["วันที่"], trend, label="Trend (Linear Regression)", linestyle="--", color="red")
@@ -62,10 +62,10 @@ ax.set_ylabel("Closing Price (Baht)")
 ax.legend()
 ax.grid(True)
 
-# ------------------ แสดงกราฟใน Streamlit ------------------
-st.pyplot(fig)
+#  แสดงกราฟใน Streamlit 
+st.pyplot(fig) 
 
-# ------------------ แสดงตารางข้อมูลแบบสวย ------------------
+#  แสดงตารางข้อมูล
 with st.expander("📊 ดูข้อมูลราคาปิดแบบตาราง"):
     df_display = df_sorted.copy()
     df_display["วันที่"] = df_display["วันที่"].dt.strftime("%Y-%m-%d")
@@ -76,5 +76,5 @@ with st.expander("📊 ดูข้อมูลราคาปิดแบบต
 st.markdown("สามารถดูข้อมูลหุ้น SCB ได้ที่ [https://www.settrade.com/th/equities/quote/SCB/historical-trading](https://www.settrade.com/th/equities/quote/SCB/historical-trading)")
 
 
-# ------------------ ลายเซ็น ------------------
+
 st.markdown("<br><hr><div style='text-align:center; font-size:16px;'>สุทธิชัย มุกโชควัฒนา 2213111178</div>", unsafe_allow_html=True)
