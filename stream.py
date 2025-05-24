@@ -22,7 +22,7 @@ st.title("📈 SCB Stock Closing Price Trend")
 
 st.markdown('<div class="subtitle">ดูแนวโน้มราคาหุ้น SCB โดยเป็นราคาย้อนหลังของหุ้น SCB 6 เดือน</div><br>', unsafe_allow_html=True)
 
-df = pd.read_excel("stock_test2.xlsx")
+df = pd.read_excel("demo_stock.xlsx")
 
 def convert_thai_date(thai_date_str):
     thai_months = {
