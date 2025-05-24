@@ -7,15 +7,10 @@ import matplotlib
 
 matplotlib.rcParams['font.family'] = 'DejaVu Sans'
 
-# หน้าเว็บเบื้องต้น 
 st.set_page_config(page_title="SCB Stock Trend", layout="wide")
 
 st.markdown("""
     <style>
-        .title {
-            font-size: 36px;
-            font-weight: bold;
-        }
         .subtitle {
             font-size: 18px;
             color: #808080;
@@ -23,14 +18,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="title">📈 SCB Stock Closing Price Trend</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">ดูแนวโน้มราคาหุ้น SCB ด้วยกราฟเส้นจากข้อมูลราคาปิด พร้อมวิเคราะห์เทรนด์ด้วย Linear Regression</div><br>', unsafe_allow_html=True)
+st.title("📈 SCB Stock Closing Price Trend")
 
-#  โหลดและเตรียมข้อมูล 
+st.markdown('<div class="subtitle">ดูแนวโน้มราคาหุ้น SCB โดยเป็นราคาย้อนหลังของหุ้น SCB 6 เดือน</div><br>', unsafe_allow_html=True)
+
 df = pd.read_excel("stock_test2.xlsx")
 
 def convert_thai_date(thai_date_str):
-    from datetime import datetime
     thai_months = {
         "ม.ค.": "01", "ก.พ.": "02", "มี.ค.": "03", "เม.ย.": "04",
         "พ.ค.": "05", "มิ.ย.": "06", "ก.ค.": "07", "ส.ค.": "08",
@@ -45,36 +39,53 @@ def convert_thai_date(thai_date_str):
 df["วันที่"] = df["วันที่"].apply(convert_thai_date)
 df_sorted = df.sort_values("วันที่")
 
-#  Linear Regression 
 X = df_sorted["วันที่"].map(pd.Timestamp.toordinal).values.reshape(-1, 1)
 y = df_sorted["ราคาปิด"].values
 model = LinearRegression()
 model.fit(X, y)
 trend = model.predict(X)
 
-#  สร้างกราฟ 
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.plot(df_sorted["วันที่"], y, label="Actual Closing Price", marker='o')
-ax.plot(df_sorted["วันที่"], trend, label="Trend (Linear Regression)", linestyle="--", color="red")
-ax.set_title("SCB Closing Price Trend")
-ax.set_xlabel("Date")
-ax.set_ylabel("Closing Price (Baht)")
-ax.legend()
-ax.grid(True)
+col1, col2 = st.columns(2)
 
-#  แสดงกราฟใน Streamlit 
-st.pyplot(fig) 
+with col1:
+    chart_type = st.selectbox(
+        "📊 เลือกประเภทกราฟ",
+        ("Line Chart",  "Pie Chart")
+    )
 
-#  แสดงตารางข้อมูล
-with st.expander("📊 ดูข้อมูลราคาปิดแบบตาราง"):
+with col2:
+    fig_width = st.slider("📐 ปรับความกว้างของกราฟ (นิ้ว)", 8, 20, 12)
+    fig_height = st.slider("📏 ปรับความสูงของกราฟ (นิ้ว)", 4, 12, 6)
+
+fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+
+if chart_type == "Line Chart":
+    ax.plot(df_sorted["วันที่"], y, label="Actual Closing Price", marker='o')
+    ax.plot(df_sorted["วันที่"], trend, label="Trend (Linear Regression)", linestyle="--", color="red")
+    ax.set_title("SCB Closing Price Trend (Line Chart)")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Closing Price (Baht)")
+    ax.legend()
+    ax.grid(True)
+
+
+elif chart_type == "Pie Chart":
+    latest_df = df_sorted.tail(5)
+    ax.pie(latest_df["ราคาปิด"], labels=latest_df["วันที่"].dt.strftime('%Y-%m-%d'), autopct='%1.1f%%')
+    ax.set_title("Pie Chart of Last 5 Closing Prices")
+
+#แสดงกราฟ
+st.pyplot(fig)
+
+#แสดงตารางข้อมูล 
+with st.expander("📋 ดูข้อมูลราคาปิดแบบตาราง"):
     df_display = df_sorted.copy()
     df_display["วันที่"] = df_display["วันที่"].dt.strftime("%Y-%m-%d")
-    df_display = df_display.round(2)
-    st.dataframe(df_display)
+    df_display.index = range(1, len(df_display) + 1)
 
+    # กำหนดให้ทุกคอลัมน์ที่เป็นตัวเลขแสดงทศนิยม 2 ตำแหน่ง
+    st.dataframe(df_display.style.format({col: "{:.2f}" for col in df_display.select_dtypes(include='number').columns}))
 
-st.markdown("สามารถดูข้อมูลหุ้น SCB ได้ที่ [https://www.settrade.com/th/equities/quote/SCB/historical-trading](https://www.settrade.com/th/equities/quote/SCB/historical-trading)")
-
-
+st.markdown("🔗 ดูข้อมูลหุ้น SCB ได้ที่ [SETTRADE](https://www.settrade.com/th/equities/quote/SCB/historical-trading)")
 
 st.markdown("<br><hr><div style='text-align:center; font-size:16px;'>สุทธิชัย มุกโชควัฒนา 2213111178</div>", unsafe_allow_html=True)
